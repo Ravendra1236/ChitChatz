@@ -5,10 +5,12 @@ import HomePage from "./components/HomePage";
 import Chats from "./components/Chats";
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/chats" element={<Chats />} />
-    </Routes>
+    <div className="App">
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/chats" element={<Chats />} />
+      </Routes>
+    </div>
   );
 }
 
