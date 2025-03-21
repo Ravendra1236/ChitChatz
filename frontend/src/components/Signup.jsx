@@ -2,6 +2,10 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+import axios from "axios";
+import { useNavigate } from "react-router-dom"; // Correct import for react-router-dom v6+
 import { useState } from "react";
 
 function Signup() {
@@ -10,25 +14,102 @@ function Signup() {
   const [password, setPassword] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
   const [picture, setPicture] = useState("");
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("warning");
+  const navigate = useNavigate(); // Initialize useNavigate
 
-  const handleSubmit = (e) => {
+  const postDetails = (pics) => {
+    setLoading(true);
+
+    if (!pics) {
+      setSnackbarMessage("Please select an Image");
+      setSnackbarSeverity("warning");
+      setSnackbarOpen(true);
+      setLoading(false);
+      return;
+    }
+
+    if (pics.type !== "image/jpeg" && pics.type !== "image/png") {
+      setSnackbarMessage("Please select a valid Image (JPEG or PNG)");
+      setSnackbarSeverity("warning");
+      setSnackbarOpen(true);
+      setLoading(false);
+      return;
+    }
+
+    const data = new FormData();
+    data.append("file", pics);
+    data.append("upload_preset", "chat-app");
+    data.append("cloud_name", "dya5bp0u6");
+
+    fetch("https://api.cloudinary.com/v1_1/dya5bp0u6/image/upload", {
+      method: "post",
+      body: data,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setPicture(data.url.toString());
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setSnackbarMessage("Image upload failed. Please try again.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        setLoading(false);
+      });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validation
     if (!name || !email || !password || !confirmPass) {
-      setError("All fields except picture are required.");
+      setSnackbarMessage("All fields except picture are required.");
+      setSnackbarSeverity("warning");
+      setSnackbarOpen(true);
       return;
     }
 
     if (password !== confirmPass) {
-      setError("Passwords do not match.");
+      setSnackbarMessage("Passwords do not match.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
       return;
     }
 
-    setError(""); // Clear error if validation passes
-    console.log({ name, email, password, picture });
-    alert("Signup successful!");
+    try {
+      const config = {
+        headers: {
+          "Content-type": "application/json",
+        },
+      };
+
+      const { data } = await axios.post(
+        "http://localhost:5000/api/user",
+        { name, email, password, picture },
+        config
+      );
+
+      setSnackbarMessage("Signup successful!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+
+      localStorage.setItem("userInfo", JSON.stringify(data));
+      setLoading(false);
+      navigate("/chats"); // Use navigate instead of history.push
+    } catch (error) {
+      setSnackbarMessage(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : "Signup failed. Please try again."
+      );
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,13 +129,6 @@ function Signup() {
       <Typography variant="h5" mb={2} textAlign="center">
         Sign Up
       </Typography>
-
-      {/* Error Message */}
-      {error && (
-        <Typography color="error" mb={2} textAlign="center">
-          {error}
-        </Typography>
-      )}
 
       {/* Name Field */}
       <Typography variant="body1" mb={1}>
@@ -110,14 +184,14 @@ function Signup() {
         margin="normal"
       />
 
-      {/* Picture Field (Optional) */}
+      {/* Picture Field */}
       <Typography variant="body1" mb={1}>
         Profile Picture (Optional)
       </Typography>
       <TextField
         fullWidth
         type="file"
-        onChange={(e) => setPicture(e.target.files[0])}
+        onChange={(e) => postDetails(e.target.files[0])}
         InputLabelProps={{
           shrink: true,
         }}
@@ -131,9 +205,25 @@ function Signup() {
         color="primary"
         sx={{ mt: 2 }}
         type="submit"
+        disabled={loading}
       >
-        Sign Up
+        {loading ? "Loading..." : "Sign Up"}
       </Button>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
