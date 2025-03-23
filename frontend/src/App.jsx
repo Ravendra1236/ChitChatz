@@ -1,14 +1,14 @@
 import "./App.css";
 
 import { Route, Routes } from "react-router-dom";
-import HomePage from "./components/HomePage";
-import Chats from "./components/Chats";
+import HomePage from "./pages/HomePage";
+import ChatPage from "./pages/ChatPage";
 function App() {
   return (
     <div className="App">
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/chats" element={<Chats />} />
+        <Route path="/chats" element={<ChatPage />} />
       </Routes>
     </div>
   );

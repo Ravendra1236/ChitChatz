@@ -3,8 +3,8 @@ import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import Signin from "./Signin";
-import Signup from "./Signup";
+import Signin from "../components/Signin";
+import Signup from "../components/Signup";
 
 function HomePage() {
   const [isSignIn, setIsSignIn] = useState(true); // State to toggle between Sign In and Sign Up
